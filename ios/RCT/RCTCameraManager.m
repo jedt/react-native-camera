@@ -982,10 +982,19 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
       if ([metadata.type isEqualToString:barcodeType] && metadata.stringValue) {
         // Transform the meta-data coordinates to screen coords
         AVMetadataMachineReadableCodeObject *transformed = (AVMetadataMachineReadableCodeObject *)[_previewLayer transformedMetadataObjectForMetadataObject:metadata];
-
+        
+        NSString *detectionString = [(AVMetadataMachineReadableCodeObject *)metadata stringValue];
+        
+        if([metadata.type isEqualToString:AVMetadataObjectTypeEAN13Code]){
+          //fix for zero prefix
+          if ([detectionString hasPrefix:@"0"] && [detectionString length] > 1) {
+            detectionString = [detectionString substringFromIndex:1];
+          }
+        }
+        
         NSDictionary *event = @{
           @"type": metadata.type,
-          @"data": metadata.stringValue,
+          @"data": detectionString,
           @"bounds": @{
             @"origin": @{
               @"x": [NSString stringWithFormat:@"%f", transformed.bounds.origin.x],
