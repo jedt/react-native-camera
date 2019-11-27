@@ -403,10 +403,21 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
             }
 
             try {
+
                 // rotate for zxing if orientation is portrait
-                Result result = getBarcodeAnyOrientation();
-                if (result == null){
-                    throw new Exception();
+                // Result result = getBarcodeAnyOrientation();
+                // if (result == null){
+                //     throw new Exception();
+                // }
+
+                PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(imageData, width, height, 0, 0, width, height, false);
+                BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+                Result result = _multiFormatReader.decodeWithState(bitmap);
+                String data = result.getText();
+                if (result.getBarcodeFormat().name().equals("EAN_13")) {
+                    if (data.substring(0, 1).equals("0")) {
+                        data = data.substring(1, data.length());
+                    }
                 }
 
                 ReactContext reactContext = RCTCameraModule.getReactContextSingleton();
@@ -424,7 +435,7 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
                 }
 
                 event.putArray("bounds", resultPoints);
-                event.putString("data", result.getText());
+                event.putString("data", data);
                 event.putString("type", result.getBarcodeFormat().toString());
                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("CameraBarCodeReadAndroid", event);
 
